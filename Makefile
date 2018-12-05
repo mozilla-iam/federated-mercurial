@@ -37,6 +37,13 @@ coverage: ## check code coverage quickly with the default Python
 	coverage html
 	$(BROWSER) htmlcov/index.html
 
+docker-build:
+	cd docker && \
+	docker build -t mozillaiam/federated-mercurial-hgweb:latest .
+
+docker-run:
+	docker run --rm -ti -p 8000:8000 mozillaiam/federated-mercurial-hgweb:latest
+
 release: dist ## package and upload a release
 	twine upload dist/*
 
