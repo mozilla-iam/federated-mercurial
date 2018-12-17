@@ -1,0 +1,31 @@
+version: '3.7'
+services:
+  accessproxy:
+    build:
+      context: ./mozilla.pkce.accessproxy/
+      dockerfile: Dockerfile
+    image: mozillaiam/mozilla.pkce.accessproxy:latest
+    env_file:
+      - development.env
+      - local.env
+    restart: always
+    expose:
+      - 8080
+    ports:
+      - 8080:8080
+    networks:
+      - default
+  hgweb:
+    build:
+      context: ./hgweb/
+      dockerfile: Dockerfile
+    image: mozillaiam/federated-mercurial-hgweb:latest
+    restart: always
+    links:
+      - accessproxy
+    ports:
+      - 8000:8000
+    networks:
+      - default
+networks:
+  default:
