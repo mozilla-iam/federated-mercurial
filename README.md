@@ -3,16 +3,23 @@
 
 CLI application that handled federated authentication for Mercurial users
 
+## Flow diagram
+
+Example implementation that this repository creates. The HTTPS access proxy and the HGWeb setup can be started with
+docker compose (`make compose-run`)
+
+![Flow diagram](https://raw.githubusercontent.com/mozilla-iam/federated-mercurial/master/docs/img/diagram.png)
+
 ## Sequence diagram
 
 ![Sequence diagram](https://raw.githubusercontent.com/mozilla-iam/federated-mercurial/master/docs/img/sequence.png)
 
 
-## Run a test hgweb
+## Run a test hgweb + Access proxy
 
 ```
 $ make docker-build
-$ make docker-run
+$ make compose-run
 ```
 
 By default it will listen on http://localhost:8000, with the port exposed, a default test repo and no SSL (DO NOT USE

@@ -1,0 +1,22 @@
+graph TD
+H(Human fa:fa-user-circle)
+CLI(Command line hg<br><em>With PKCE extension, listens on http://localhost:port/</em>)
+AP(HTTPS Access Proxy<br><em>NGINX OpenResty reverse proxy</em>)
+AProvider(Access Provider/SSO<br><em>Such as Auth0</em>)
+PKCE(Access Provider PKCE Endpoint/SSO<br><em>Such as Auth0</em>)
+HG(HG Web CGI)
+HGFS(Mercurial source repositories on disk)
+
+subgraph User authentication
+H--hg push https://hg.mozilla.org/test-->CLI
+CLI-."Open local web-browser (as needed)".->AProvider
+AProvider--"Authenticated user w/ PKCE token ."-->CLI
+end
+
+subgraph PKCE CLI authentication
+CLI--Sends PKCE token-->AP
+AP--"Please verify my PKCE token ."-->PKCE
+PKCE--"It's valid! ."-->AP
+AP--"REMOTE USER: testuserhere<br>Push /test [commit data]"-->HG
+HG---HGFS
+end
