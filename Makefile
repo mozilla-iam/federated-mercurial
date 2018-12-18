@@ -14,8 +14,12 @@ test: ## run tests quickly with the default Python
 
 .PHONY: docker-build
 docker-build:
+	@echo Building federated-mercurial-hgweb
 	cd docker/hgweb && \
-	docker build -t mozillaiam/federated-mercurial-hgweb:latest .
+	  docker build -t mozillaiam/federated-mercurial-hgweb:latest .
+	@echo Building mozilla.pkce.accessproxy
+	cd docker/mozilla.pkce.accessproxy && \
+	  docker build -t mozillaiam/mozilla.pkce.accessproxy:latest .
 
 .PHONY: docker-run
 docker-run:
