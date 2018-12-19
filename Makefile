@@ -6,7 +6,7 @@ all:
 
 .PHONY: lint
 lint: ## check style with flake8
-	flake8 federated_mercurial tests
+	flake8 federated_mercurial_extension tests
 
 .PHONY: test
 test: ## run tests quickly with the default Python
