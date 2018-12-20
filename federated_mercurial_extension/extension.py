@@ -24,36 +24,35 @@ def extsetup(ui):
     configitem('sso', 'scope', default='openid https://sso.mozilla.com/claim/groups')
 
 
-class Tokens(object):
-    def get_local_tokens(ui):
-        ui.debug('sso.get_local_token: attempting to use cached token, if any\n')
-        ## XXX actually add caching
-        tokens = get_tokens(ui)
-        id_token = json.loads(base64.b64decode(tokens['id_token'].split('.')[1]+'========='))
-        ui.debug('sso.get_local_token: current id_token is set to expire at {}\n'.format(id_token['exp']))
-        return tokens
+def get_local_tokens(ui):
+    ui.debug('sso.get_local_token: attempting to use cached token, if any\n')
+    ## XXX actually add caching
+    tokens = get_tokens(ui)
+    id_token = json.loads(base64.b64decode(tokens['id_token'].split('.')[1]+'========='))
+    ui.debug('sso.get_local_token: current id_token is set to expire at {}\n'.format(id_token['exp']))
+    return tokens
 
-    def get_tokens(ui):
-        client_id = ui.config('sso', 'clientid')
-        scope = ui.config('sso', 'scope')
-        wellknownurl = ui.config('sso', 'wellknownurl')
+def get_tokens(ui):
+    client_id = ui.config('sso', 'clientid')
+    scope = ui.config('sso', 'scope')
+    wellknownurl = ui.config('sso', 'wellknownurl')
 
-        if client_id is None or scope is None or wellknownurl is None:
-            ui.write('sso extension settings are incorrect, make sure you have an [sso] section with clientid, scope and '
-                     'wellknownurl specified')
-            return None
+    if client_id is None or scope is None or wellknownurl is None:
+        ui.write('sso extension settings are incorrect, make sure you have an [sso] section with clientid, scope and '
+                 'wellknownurl specified')
+        return None
 
-        # Note, don't use requests.get(..).json() as this would require the simplejson import instead of just json
-        oidc_config = json.loads(requests.get(wellknownurl).text)
-        jwks = json.loads(requests.get(oidc_config['jwks_uri']).text)
+    # Note, don't use requests.get(..).json() as this would require the simplejson import instead of just json
+    oidc_config = json.loads(requests.get(wellknownurl).text)
+    jwks = json.loads(requests.get(oidc_config['jwks_uri']).text)
 
-        ui.debug('sso.get_token: jwks retrieved, fetching token\n')
+    ui.debug('sso.get_token: jwks retrieved, fetching token\n')
 
-        tokens = login(oidc_config['authorization_endpoint'], oidc_config['token_endpoint'], client_id, scope)
-        # Drop access token since we're not using it, just to be safe
-        del tokens['access_token']
-        ui.debug('sso.get_token: retrieved tokens\n')
-        return tokens
+    tokens = login(oidc_config['authorization_endpoint'], oidc_config['token_endpoint'], client_id, scope)
+    # Drop access token since we're not using it, just to be safe
+    del tokens['access_token']
+    ui.debug('sso.get_token: retrieved tokens\n')
+    return tokens
 
 def sendrequest(orig, ui, opener, req):
     tokens = get_local_tokens(ui)
