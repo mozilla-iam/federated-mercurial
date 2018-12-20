@@ -13,9 +13,8 @@ Pass these environment variable or store them in credstash:
 - `httpsredir`: Set to true in order to enable automatic HTTPS redirection (recommended)
 - `allowed_group`: The list of groups that are allowed to get in. This will check the JWT for a `groups` or similar
   claim.
-- `jwt_pub_key`: The PEM formatted public key that JWT's can be verified with. If the OAuth2 server signing JWTs also
-  supports OpenID Connect, you can usually find this in the discovery URL's JWKS (it's the `x5c` parameter). Note that
-the line feeds ("\n") are required.
+- `discovery_url`: The OpenID Connect discovery URL, used to find the issuer, public key to verify against, etc.
+- `client_id`: Your OpenID Connect client id, used to verify the audience.
 
 ## Testing
 

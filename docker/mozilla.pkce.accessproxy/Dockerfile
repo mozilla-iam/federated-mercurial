@@ -18,6 +18,7 @@ ENV PATH=$PATH:/usr/local/openresty/luajit/bin/:/usr/local/openresty/nginx/sbin/
 # Install LUA libs
 RUN yum -y install openresty-opm
 RUN opm get cdbattags/lua-resty-jwt
+RUN opm get pintsized/lua-resty-http
 
 # Credstash
 RUN yum install -y python-pip &&  pip install credstash
