@@ -12,11 +12,15 @@ from login import login
 from mercurial import (
         extensions,
         httppeer,
+        url,
         registrar
 )
 
+tokens = None
+
 def extsetup(ui):
     extensions.wrapfunction(httppeer, 'sendrequest', sendrequest)
+    extensions.wrapfunction(url, 'opener', opener)
     configtable = {}
     configitem = registrar.configitem(configtable)
     configitem('sso', 'wellknownurl', default='https://auth.mozilla.auth0.com/.well-known/openid-configuration')
@@ -25,8 +29,11 @@ def extsetup(ui):
 
 
 def get_local_tokens(ui):
+    global tokens
     ui.debug('sso.get_local_token: attempting to use cached token, if any\n')
-    ## XXX actually add caching
+    ## XXX actually add real file caching
+    if tokens is not None:
+        return tokens
     tokens = get_tokens(ui)
     id_token = json.loads(base64.b64decode(tokens['id_token'].split('.')[1]+'========='))
     ui.debug('sso.get_local_token: current id_token is set to expire at {}\n'.format(id_token['exp']))
@@ -53,6 +60,18 @@ def get_tokens(ui):
     del tokens['access_token']
     ui.debug('sso.get_token: retrieved tokens\n')
     return tokens
+
+
+def opener(orig, ui, authinfo=None, useragent=None, loggingfh=None,
+    loggingname=b's', loggingopts=None, sendaccept=True):
+    opener = orig(ui, authinfo, useragent, loggingfh, loggingname, loggingopts, sendaccept)
+    tokens = get_local_tokens(ui)
+    if tokens is None:
+        ui.debug('sso.opener: no tokens received! Push will probably fail due to missing authentication data')
+    else:
+        ui.debug('sso.opener: adding authorization header\n')
+        opener.addheaders.append((r'Authorization', r'Bearer {}'.format(tokens['id_token'])))
+    return opener
 
 def sendrequest(orig, ui, opener, req):
     tokens = get_local_tokens(ui)
