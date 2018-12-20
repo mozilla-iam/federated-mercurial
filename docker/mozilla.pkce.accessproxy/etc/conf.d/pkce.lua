@@ -58,6 +58,7 @@ end
 -- Dynamic vars
 local client_id = os.getenv("client_id")
 local discovery_url = os.getenv("discovery_url")
+-- local groups = os.getenv("groups")
 local discovery, err = get_url_json(discovery_url)
 local issuer = discovery.issuer
 local jwks, err = get_url_json(discovery.jwks_uri)
@@ -73,8 +74,8 @@ local claimspec = {
   iat = validators.is_not_before(),
   iss = validators.equals_any_of({ issuer }),
   aud = validators.equals_any_of({ client_id } ), -- The client id / our audience, this is as important as `iss`
---  https://sso.mozilla.com/claim/groups = validators.opt_matches("") -- Mozilla group structure
 }
+-- claimspec["https://sso.mozilla.com/claim/groups"] = validators.opt_matches(group) -- Mozilla group structure
 
 if not jwt_pub_key then
   ngx.log(ngx.WARN, "no jwt public key, make sure you have set jwt_pub_key")
@@ -89,7 +90,6 @@ elseif not jwt_token then
   ngx.exit(ngx.HTTP_UNAUTHORIZED)
 
 else
--- ngx.req.set_header("REMOTE_USER", session.data.user.email)
   local jwt_obj = jwt:verify(jwt_pub_key, jwt_token)
   if not jwt_obj.verified then
     ngx.log(ngx.ERR, cjson.encode(jwt_obj))
@@ -100,6 +100,10 @@ else
   end
 
   ngx.log(ngx.NOTICE, "JWT token verified successfully")
-  ngx.say(cjson.encode(jwt_obj));
-  ngx.exit(ngx.HTTP_OK)
+  ngx.req.set_header("REMOTE_USER", jwt_obj.sub)
+  -- For dev only
+  -- ngx.say(cjson.encode(jwt_obj));
+  --ngx.log(ngx.ERR, cjson.encode(jwt_obj))
+  -- ngx.exit(ngx.HTTP_OK)
+  -- pass through
 end
