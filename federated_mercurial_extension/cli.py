@@ -4,8 +4,6 @@ import base64
 import json
 import logging
 import requests
-import time
-import platform
 
 from login import login
 
@@ -20,7 +18,6 @@ def do_login(config):
                    config['scope'])
     logger.debug(tokens)
     return tokens
-
 
 def main():
     logger.setLevel(logging.DEBUG)

@@ -89,7 +89,7 @@ def login(authorization_endpoint='https://auth.mozilla.auth0.com/authorize',
             'code': code,
             'redirect_uri': redirect_uri}
     r = requests.post(token_endpoint, headers=headers, data=json.dumps(body))
-    data = r.json()
+    data = json.loads(r.text)
 
     return data
 
