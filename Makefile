@@ -29,3 +29,8 @@ docker-run:
 compose-run:
 	cd docker && \
 	  docker-compose -f compose.yml up
+
+.PHONY: compose-down
+compose-down:
+	cd docker && \
+	  docker-compose -f compose.yml down
