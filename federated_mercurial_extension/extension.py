@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
-import base64
-import json
-import requests
-
-# Import login library as its not yet available on pypi
 import os
 import sys
 
-sys.path.append(os.path.dirname(os.path.realpath(__file__)))
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+import base64
+import requests
+import json
 
-from login import login
+from federated_mercurial_extension.login import PkceLogin
 from mercurial import extensions, httppeer, url, registrar
 
 tokens = None
@@ -49,17 +47,11 @@ def get_tokens(ui):
         )
         return None
 
-    # Note, don't use requests.get(..).json() as this would require the simplejson import instead of just json
-    oidc_config = json.loads(requests.get(wellknownurl).text)
-    jwks = json.loads(requests.get(oidc_config["jwks_uri"]).text)
-
     ui.debug("sso.get_token: jwks retrieved, fetching token\n")
-
-    tokens = login(oidc_config["authorization_endpoint"], oidc_config["token_endpoint"], client_id, scope)
-    # Drop access token since we're not using it, just to be safe
-    del tokens["access_token"]
+    pkce = PkceLogin(wellknownurl, client_id, scope)
+    pkce.refresh_id_token()
     ui.debug("sso.get_token: retrieved tokens\n")
-    return tokens
+    return pkce.tokens
 
 
 def opener(

@@ -11,6 +11,7 @@ import logging
 import time
 from dateutil import parser
 from datetime import datetime
+from federated_mercurial_extension import listener
 
 try:
     from datetime import timezone
@@ -23,12 +24,15 @@ try:
 except ImportError:
     # P2 Compat
     from urllib import urlencode
-from xdg import XDG_CACHE_HOME
-from federated_aws_cli import listener
+
+from appdirs import user_data_dir
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
-requests_cache.install_cache("{}/federated_aws_cli_cache".format(XDG_CACHE_HOME))
+app_dir = user_data_dir("federated_mercurial_extension")
+if not os.path.exists(app_dir):
+    os.mkdir(app_dir)
+requests_cache.install_cache("{}/federated_mercurial_cache".format(app_dir))
 
 
 class PkceLogin:
@@ -47,8 +51,8 @@ class PkceLogin:
         self.redirect_uri = "http://localhost:{}/redirect_uri".format(self.port)
 
     def __deferred_init__(self):
-        self.openid_configuration = requests.get(self.well_known_url).json()
-        self.jwks = requests.get(self.openid_configuration["jwks_uri"]).json()
+        self.openid_configuration = json.loads(requests.get(self.well_known_url).text)
+        self.jwks = json.loads(requests.get(self.openid_configuration["jwks_uri"]).text)
         self.authorization_endpoint = self.openid_configuration["authorization_endpoint"]
         self.token_endpoint = self.openid_configuration["token_endpoint"]
         self.code_verifier = self.base64_without_padding(os.urandom(32))
@@ -135,7 +139,7 @@ class PkceLogin:
         # Open the browser window to the login url
         # Start the listener
         logger.debug("About to spawn browser window to {}".format(url))
-        webbrowser.get("firefox").open(
+        webbrowser.get("chromium").open(
             url
         )  # This specifies firefox to work around webbrowser.BackgroundBrowser sending stdout/stderr to the console :
         # https://github.com/python/cpython/blob/783b794a5e6ea3bbbaba45a18b9e03ac322b3bd4/Lib/webbrowser.py#L177-L181
@@ -173,6 +177,6 @@ class PkceLogin:
         # We need to compute that as OIDC gives us a delta, not an absolute time
         # We store this in `expires_at`
         now = time.time()
-        self.tokens["expires_at"] = datetime.fromtimestamp(now + int(data["expires_in"])) + "+00:00"
+        self.tokens["expires_at"] = str(datetime.fromtimestamp(now + int(data["expires_in"]))) + "+00:00"
         logger.debug("Got new tokens through PKCE, these expire at: {}".format(self.tokens["expires_at"]))
         return self.tokens

@@ -8,7 +8,7 @@ from setuptools import setup, find_packages
 with open("README.md") as readme_file:
     readme = readme_file.read()
 
-requirements = ["Click>=6.0", "requests-cache"]
+requirements = ["Click>=6.0", "requests-cache", "appdirs", "python-dateutil", "brotli"]
 
 setup_requirements = ["pytest-runner"]
 
@@ -32,7 +32,7 @@ setup(
     description="CLI application that handled federated authentication for Mercurial users",
     entry_points={"console_scripts": ["federated_mercurial_extension=federated_mercurial_extension.cli:main"]},
     install_requires=requirements,
-    long_description=readme + "\n\n" + history,
+    long_description=readme,
     include_package_data=True,
     keywords="federated_mercurial_extension",
     name="federated_mercurial_extension",

@@ -1,7 +1,5 @@
-# -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from federated_mercurial_extension import listener
+from federated_mercurial_extension import login
 
-"""Top-level package for federated-boto."""
-
-__author__ = """Mozilla Infosec"""
-__email__ = 'infosec@mozilla.com'
-__version__ = '0.0.1'
+__all__ = [listener, login]
