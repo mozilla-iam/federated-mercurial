@@ -99,7 +99,9 @@ class PkceLogin:
             now = datetime.now(timezone.utc)
         except NameError:
             # P2
-            now = datetime.now()
+            from dateutil.tz import tzutc
+
+            now = datetime.now(tzutc())
         exp = parser.parse(self.tokens["expires_at"])
         diff = exp - now
         # Make this a timestamp

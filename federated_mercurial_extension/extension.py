@@ -7,10 +7,16 @@ import base64
 import requests
 import json
 
+from appdirs import user_data_dir
 from federated_mercurial_extension.login import PkceLogin
 from mercurial import extensions, httppeer, url, registrar
 
 tokens = None
+pkce = None
+
+app_dir = user_data_dir("federated_mercurial_extension")
+if not os.path.exists(app_dir):
+    os.mkdir(app_dir)
 
 
 def extsetup(ui):
@@ -25,8 +31,8 @@ def extsetup(ui):
 
 def get_local_tokens(ui):
     global tokens
+    global pkce
     ui.debug("sso.get_local_token: attempting to use cached token, if any\n")
-    ## XXX actually add real file caching
     if tokens is not None:
         return tokens
     tokens = get_tokens(ui)
@@ -36,9 +42,12 @@ def get_local_tokens(ui):
 
 
 def get_tokens(ui):
+    global app_dir
+    global pkce
     client_id = ui.config("sso", "clientid")
     scope = ui.config("sso", "scope")
     wellknownurl = ui.config("sso", "wellknownurl")
+    disk_cache_path = "{}/pkce_tokens".format(app_dir)
 
     if client_id is None or scope is None or wellknownurl is None:
         ui.write(
@@ -48,9 +57,25 @@ def get_tokens(ui):
         return None
 
     ui.debug("sso.get_token: jwks retrieved, fetching token\n")
-    pkce = PkceLogin(wellknownurl, client_id, scope)
+    if pkce is None:
+        pkce = PkceLogin(wellknownurl, client_id, scope)
+        ui.debug("sso.get_token: loading credentials from disk cache: {}\n".format(disk_cache_path))
+        if os.path.isfile(disk_cache_path):
+            with open(disk_cache_path) as fd:
+                try:
+                    pkce.tokens = json.load(fd)
+                except ValueError:
+                    ui.debug("sso.get_token: could not load disk cache")
+                    os.unlink(disk_cache_path)
+
     pkce.refresh_id_token()
     ui.debug("sso.get_token: retrieved tokens\n")
+    # Not P2 compat
+    #    with open(os.open(disk_cache_path, os.O_CREAT | os.O_WRONLY, 0o600), "w+") as fd:
+    os.umask(077)
+    with open(disk_cache_path, "w+") as fd:
+        json.dump(pkce.tokens, fd)
+        ui.debug("sso.get_token: saved tokens to disk cache: {}\n".format(disk_cache_path))
     return pkce.tokens
 
 
