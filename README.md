@@ -17,6 +17,17 @@ docker compose (`make compose-run`)
 
 ## Run a test hgweb + Access proxy
 
+Make sure you have the access proxy somewhat setup with an OpenID Connect Client, f.e.:
+
+Add a file in `docker/local.env` which contain something like:
+```
+discovery_url=https://auth.mozilla.auth0.com/.well-known/openid-configuration
+client_id=WhSYI0qGKdtrB63gBjsdgN2qy69e79x8
+https_redirect=false
+backend=http://hgweb:8000
+```
+
+And then:
 ```
 $ make docker-build
 $ make compose-run
