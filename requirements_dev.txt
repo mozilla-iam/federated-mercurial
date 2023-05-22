@@ -9,7 +9,7 @@ Sphinx==1.8.1
 twine==1.12.1
 flask==1.0.2
 python-dotenv==0.9.1
-requests==2.20.1
+requests==2.31.0
 
 pytest==3.8.2
 pytest-runner==4.2
